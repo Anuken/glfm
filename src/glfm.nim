@@ -125,69 +125,69 @@ type
 ## Function pointer returned from glfmGetProcAddress
 
 type
-  GLFMProc* = proc ()
+  GLFMProc* = proc () {.cdecl.}
 
 ## Main loop callback function. The frame time is in seconds, and is not related to wall time.
 
 type
-  GLFMMainLoopFunc* = proc (display: ptr GLFMDisplay; frameTime: cdouble)
+  GLFMMainLoopFunc* = proc (display: ptr GLFMDisplay; frameTime: cdouble) {.cdecl.}
 
 ## Callback function for mouse or touch events. The (x,y) values are in pixels.
 ## The function should return true if the event was handled, and false otherwise.
 
 type
   GLFMTouchFunc* = proc (display: ptr GLFMDisplay; touch: cint; phase: GLFMTouchPhase;
-                      x: cdouble; y: cdouble): bool
+                      x: cdouble; y: cdouble): bool {.cdecl.}
 
 ## Callback function for key events.
 ## The function should return true if the event was handled, and false otherwise.
 
 type
   GLFMKeyFunc* = proc (display: ptr GLFMDisplay; keyCode: GLFMKey;
-                    action: GLFMKeyAction; modifiers: cint): bool
+                    action: GLFMKeyAction; modifiers: cint): bool {.cdecl.}
 
 ## Callback function for character input events.
 
 type
-  GLFMCharFunc* = proc (display: ptr GLFMDisplay; utf8: cstring; modifiers: cint)
+  GLFMCharFunc* = proc (display: ptr GLFMDisplay; utf8: cstring; modifiers: cint) {.cdecl.}
 
 ## Callback function for keyboard visibility, in pixels.
 
 type
   GLFMKeyboardVisibilityChangedFunc* = proc (display: ptr GLFMDisplay; visible: bool;
-      x: cdouble; y: cdouble; width: cdouble; height: cdouble)
+      x: cdouble; y: cdouble; width: cdouble; height: cdouble) {.cdecl.}
 
 ## Callback when the surface could not be created.
 
 type
-  GLFMSurfaceErrorFunc* = proc (display: ptr GLFMDisplay; message: cstring)
+  GLFMSurfaceErrorFunc* = proc (display: ptr GLFMDisplay; message: cstring) {.cdecl.}
 
 ## Callback function when the OpenGL surface is created
 
 type
-  GLFMSurfaceCreatedFunc* = proc (display: ptr GLFMDisplay; width: cint; height: cint)
+  GLFMSurfaceCreatedFunc* = proc (display: ptr GLFMDisplay; width: cint; height: cint) {.cdecl.}
 
 ## Callback function when the OpenGL surface is resized (or rotated).
 
 type
-  GLFMSurfaceResizedFunc* = proc (display: ptr GLFMDisplay; width: cint; height: cint)
+  GLFMSurfaceResizedFunc* = proc (display: ptr GLFMDisplay; width: cint; height: cint) {.cdecl.}
 
 ## Callback function when the OpenGL surface is destroyed.
 
 type
-  GLFMSurfaceDestroyedFunc* = proc (display: ptr GLFMDisplay)
+  GLFMSurfaceDestroyedFunc* = proc (display: ptr GLFMDisplay) {.cdecl.}
 
 ## Callback function when the system recieves a low memory warning.
 
 type
-  GLFMMemoryWarningFunc* = proc (display: ptr GLFMDisplay)
-  GLFMAppFocusFunc* = proc (display: ptr GLFMDisplay; focused: bool)
+  GLFMMemoryWarningFunc* = proc (display: ptr GLFMDisplay) {.cdecl.}
+  GLFMAppFocusFunc* = proc (display: ptr GLFMDisplay; focused: bool) {.cdecl.}
 
 ##  MARK: Functions
 ## Main entry point for the app, where the display can be initialized and the GLFMMainLoopFunc
 ## can be set.
 
-{.push importc.}
+{.push importc, cdecl.}
 
 proc glfmMain*(display: ptr GLFMDisplay)
 ## Init the display condifuration. Should only be called in glfmMain.
