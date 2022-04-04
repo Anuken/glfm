@@ -301,6 +301,8 @@ proc glfmSetKeyboardVisibilityChangedFunc*(display: ptr GLFMDisplay;
 when defined(android):
   proc glfmAndroidGetActivity*(): pointer #ptr ANativeActivity
 
+#TODO iOS
+proc glfmFilesDir*(): cstring
 proc glfmHomeDir*(): cstring
 proc glfmBundleDir*(): cstring
 proc glfmReadFileSize*(filename: cstring): cint
