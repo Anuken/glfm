@@ -29,13 +29,23 @@ const
 ##  GLFM_PLATFORM_ANDROID
 ##  GLFM_PLATFORM_EMSCRIPTEN
 
+#{.passC: "-I" & (currentSourcePath() / "../").}
+
+{.compile: "glfm_platform.h".}
+
 when defined(android):
+  {.compile: "glfm_platform_android.c".}
+
   const
     GLFM_PLATFORM_ANDROID* = true
 elif defined(emscripten):
+  {.compile: "glfm_platform_emscripten.c".}
+
   const
     GLFM_PLATFORM_EMSCRIPTEN* = true
 elif defined(ios):
+  {.compile: "glfm_platform_ios.c".}
+
   when defined(TARGET_OS_TV):
     const
       GLFM_PLATFORM_TVOS* = true
