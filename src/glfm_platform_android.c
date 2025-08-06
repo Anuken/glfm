@@ -1365,8 +1365,8 @@ void android_main(struct android_app *app) {
         int events;
         struct android_poll_source *source;
 
-        while ((eventIdentifier = ALooper_pollAll(platformData->animating ? 0 : -1, NULL, &events,
-                (void **)&source)) >= 0) {
+        while ((eventIdentifier = ALooper_pollOnce(platformData->animating ? 0 : -1, NULL, &events,
+                (void **)&source)) >= ALOOPER_POLL_TIMEOUT) {
             if (source) {
                 source->process(app, source);
             }
