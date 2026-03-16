@@ -41,6 +41,9 @@
 
 //PATCH (anuke): Add logging
 
+
+#ifndef NDEBUG
+
 static int pfd[2];
 static pthread_t thr;
 static const char *tag = "myapp";
@@ -75,6 +78,7 @@ int start_logger(const char *app_name){
     return 0;
 }
 
+#endif
 //end patch
 
 // MARK: - Platform data (global singleton)
@@ -751,7 +755,9 @@ JNIEXPORT void ANativeActivity_onCreate(ANativeActivity *activity, void *savedSt
     (void)savedState;
     (void)savedStateSize;
 
+    #ifndef NDEBUG
     start_logger("NIM");
+    #endif
 
     GLFM_LOG_LIFECYCLE("ANativeActivity_onCreate (API %i)", activity->sdkVersion);
     ALooper *looper = ALooper_forThread();
