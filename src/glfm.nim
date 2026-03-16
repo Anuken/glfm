@@ -29,22 +29,25 @@ const
 ##  GLFM_PLATFORM_ANDROID
 ##  GLFM_PLATFORM_EMSCRIPTEN
 
-#{.passC: "-I" & (currentSourcePath() / "../").}
+import os
 
-{.compile: "glfm_platform.h".}
+{.passC: "-I" & (currentSourcePath().parentDir()).}
+
+{.compile: "glfm.h".}
+{.compile: "glfm_internal.h".}
 
 when defined(android):
-  {.compile: "glfm_platform_android.c".}
+  {.compile: "glfm_android.c".}
 
   const
     GLFM_PLATFORM_ANDROID* = true
 elif defined(emscripten):
-  {.compile: "glfm_platform_emscripten.c".}
+  {.compile: "glfm_emscripten.c".}
 
   const
     GLFM_PLATFORM_EMSCRIPTEN* = true
 elif defined(ios):
-  {.compile: "glfm_platform_ios.c".}
+  {.compile: "glfm_apple.c".}
 
   when defined(TARGET_OS_TV):
     const
@@ -52,24 +55,6 @@ elif defined(ios):
   else:
     const
       GLFM_PLATFORM_IOS* = true
-
-
-##  OpenGL ES includes
-
-# when defined(GLFM_INCLUDE_ES32):
-#   when defined(GLFM_PLATFORM_IOS) or defined(GLFM_PLATFORM_TVOS):
-#   elif defined(GLFM_PLATFORM_EMSCRIPTEN):
-
-# elif defined(GLFM_INCLUDE_ES31):
-#   when defined(GLFM_PLATFORM_IOS) or defined(GLFM_PLATFORM_TVOS):
-#   elif defined(GLFM_PLATFORM_EMSCRIPTEN):
-
-# elif defined(GLFM_INCLUDE_ES3):
-#   when defined(GLFM_PLATFORM_IOS) or defined(GLFM_PLATFORM_TVOS):
-#   elif defined(GLFM_PLATFORM_EMSCRIPTEN):
-
-# elif not defined(GLFM_INCLUDE_NONE):
-#   when defined(GLFM_PLATFORM_IOS) or defined(GLFM_PLATFORM_TVOS):
 
 
 ##  MARK: Enums
@@ -117,11 +102,141 @@ type
     GLFMMouseCursorAuto, GLFMMouseCursorNone, GLFMMouseCursorDefault,
     GLFMMouseCursorPointer, GLFMMouseCursorCrosshair, GLFMMouseCursorText
   GLFMKey* = enum
-    GLFMKeyBackspace = 0x00000008, GLFMKeyTab = 0x00000009, GLFMKeyEnter = 0x0000000D,
-    GLFMKeyEscape = 0x0000001B, GLFMKeySpace = 0x00000020, GLFMKeyLeft = 0x00000025,
-    GLFMKeyUp = 0x00000026, GLFMKeyRight = 0x00000027, GLFMKeyDown = 0x00000028,
-    GLFMKeyNavBack = 0x00001000, GLFMKeyNavMenu = 0x00001001,
-    GLFMKeyNavSelect = 0x00001002, GLFMKeyPlayPause = 0x00002000
+    GLFMKeyUnknown           = 0x00,
+
+    # The key codes below have the same values as ASCII codes (uppercase)
+
+    GLFMKeyBackspace         = 0x08, # Backspace key ("delete" on Apple platforms).
+    GLFMKeyTab               = 0x09,
+    GLFMKeyEnter             = 0x0D, # Enter key ("return" on Apple platforms).
+    GLFMKeyEscape            = 0x1B,
+    GLFMKeySpace             = 0x20,
+    GLFMKeyQuote             = 0x27,
+    GLFMKeyComma             = 0x2C,
+    GLFMKeyMinus             = 0x2D,
+    GLFMKeyPeriod            = 0x2E,
+    GLFMKeySlash             = 0x2F,
+    GLFMKey0                 = 0x30,
+    GLFMKey1                 = 0x31,
+    GLFMKey2                 = 0x32,
+    GLFMKey3                 = 0x33,
+    GLFMKey4                 = 0x34,
+    GLFMKey5                 = 0x35,
+    GLFMKey6                 = 0x36,
+    GLFMKey7                 = 0x37,
+    GLFMKey8                 = 0x38,
+    GLFMKey9                 = 0x39,
+    GLFMKeySemicolon         = 0x3B,
+    GLFMKeyEqual             = 0x3D,
+    GLFMKeyA                 = 0x41,
+    GLFMKeyB                 = 0x42,
+    GLFMKeyC                 = 0x43,
+    GLFMKeyD                 = 0x44,
+    GLFMKeyE                 = 0x45,
+    GLFMKeyF                 = 0x46,
+    GLFMKeyG                 = 0x47,
+    GLFMKeyH                 = 0x48,
+    GLFMKeyI                 = 0x49,
+    GLFMKeyJ                 = 0x4A,
+    GLFMKeyK                 = 0x4B,
+    GLFMKeyL                 = 0x4C,
+    GLFMKeyM                 = 0x4D,
+    GLFMKeyN                 = 0x4E,
+    GLFMKeyO                 = 0x4F,
+    GLFMKeyP                 = 0x50,
+    GLFMKeyQ                 = 0x51,
+    GLFMKeyR                 = 0x52,
+    GLFMKeyS                 = 0x53,
+    GLFMKeyT                 = 0x54,
+    GLFMKeyU                 = 0x55,
+    GLFMKeyV                 = 0x56,
+    GLFMKeyW                 = 0x57,
+    GLFMKeyX                 = 0x58,
+    GLFMKeyY                 = 0x59,
+    GLFMKeyZ                 = 0x5A,
+    GLFMKeyBracketLeft       = 0x5B,
+    GLFMKeyBackslash         = 0x5C,
+    GLFMKeyBracketRight      = 0x5D,
+    GLFMKeyBackquote         = 0x60, # Backquote, AKA grave.
+    GLFMKeyDelete            = 0x7F, # Delete key ("forward delete" on Apple platforms).
+
+    # Non-ASCII keys. These values may change in the future.
+
+    GLFMKeyCapsLock          = 0x80,
+    GLFMKeyShiftLeft         = 0x81,
+    GLFMKeyShiftRight        = 0x82,
+    GLFMKeyControlLeft       = 0x83,
+    GLFMKeyControlRight      = 0x84,
+    GLFMKeyAltLeft           = 0x85, # Left alt key (option key on Apple platforms).
+    GLFMKeyAltRight          = 0x86, # Right alt key (option key on Apple platforms).
+    GLFMKeyMetaLeft          = 0x87, # Left meta key (command key on Apple platforms).
+    GLFMKeyMetaRight         = 0x88, # Right meta key (command key on Apple platforms).
+    GLFMKeyMenu              = 0x89, # Menu key, AKA context menu.
+
+    GLFMKeyInsert            = 0x90,
+    GLFMKeyPageUp            = 0x91,
+    GLFMKeyPageDown          = 0x92,
+    GLFMKeyEnd               = 0x93,
+    GLFMKeyHome              = 0x94,
+    GLFMKeyArrowLeft         = 0x95,
+    GLFMKeyArrowUp           = 0x96,
+    GLFMKeyArrowRight        = 0x97,
+    GLFMKeyArrowDown         = 0x98,
+
+    GLFMKeyPower             = 0x99,
+    GLFMKeyFunction          = 0x9A, # Fn key on Apple platforms.
+    GLFMKeyPrintScreen       = 0x9B, # Print Screen or System Request key.
+    GLFMKeyScrollLock        = 0x9C,
+    GLFMKeyPause             = 0x9D, # Pause/Break key.
+
+    GLFMKeyNumLock           = 0xA0, # NumLock key ("clear" on Apple platforms).
+    GLFMKeyNumpadDecimal     = 0xA1,
+    GLFMKeyNumpadMultiply    = 0xA2,
+    GLFMKeyNumpadAdd         = 0xA3,
+    GLFMKeyNumpadDivide      = 0xA4,
+    GLFMKeyNumpadEnter       = 0xA5,
+    GLFMKeyNumpadSubtract    = 0xA6,
+    GLFMKeyNumpadEqual       = 0xA7,
+
+    GLFMKeyNumpad0           = 0xB0,
+    GLFMKeyNumpad1           = 0xB1,
+    GLFMKeyNumpad2           = 0xB2,
+    GLFMKeyNumpad3           = 0xB3,
+    GLFMKeyNumpad4           = 0xB4,
+    GLFMKeyNumpad5           = 0xB5,
+    GLFMKeyNumpad6           = 0xB6,
+    GLFMKeyNumpad7           = 0xB7,
+    GLFMKeyNumpad8           = 0xB8,
+    GLFMKeyNumpad9           = 0xB9,
+
+    GLFMKeyF1                = 0xC1,
+    GLFMKeyF2                = 0xC2,
+    GLFMKeyF3                = 0xC3,
+    GLFMKeyF4                = 0xC4,
+    GLFMKeyF5                = 0xC5,
+    GLFMKeyF6                = 0xC6,
+    GLFMKeyF7                = 0xC7,
+    GLFMKeyF8                = 0xC8,
+    GLFMKeyF9                = 0xC9,
+    GLFMKeyF10               = 0xD0,
+    GLFMKeyF11               = 0xD1,
+    GLFMKeyF12               = 0xD2,
+    GLFMKeyF13               = 0xD3,
+    GLFMKeyF14               = 0xD4,
+    GLFMKeyF15               = 0xD5,
+    GLFMKeyF16               = 0xD6,
+    GLFMKeyF17               = 0xD7,
+    GLFMKeyF18               = 0xD8,
+    GLFMKeyF19               = 0xD9,
+    GLFMKeyF20               = 0xDA,
+    GLFMKeyF21               = 0xDB,
+    GLFMKeyF22               = 0xDC,
+    GLFMKeyF23               = 0xDD,
+    GLFMKeyF24               = 0xDE,
+
+    GLFMKeyNavigationBack    = 0xE0, # Back button on Android, menu/back button on tvOS remote.
+    GLFMKeyMediaSelect       = 0xE1, # Select button on tvOS remote.
+    GLFMKeyMediaPlayPause    = 0xE2, # Play/pause button on tvOS remote.
   GLFMKeyModifier* = enum
     GLFMKeyModifierShift = (1 shl 0), GLFMKeyModifierCtrl = (1 shl 1),
     GLFMKeyModifierAlt = (1 shl 2), GLFMKeyModifierMeta = (1 shl 3)
@@ -137,10 +252,10 @@ type
 type
   GLFMProc* = proc () {.cdecl.}
 
-## Main loop callback function. The frame time is in seconds, and is not related to wall time.
+## Render callback function.
 
 type
-  GLFMMainLoopFunc* = proc (display: ptr GLFMDisplay; frameTime: cdouble) {.cdecl.}
+  GLFMRenderFunc* = proc (display: ptr GLFMDisplay) {.cdecl.}
 
 ## Callback function for mouse or touch events. The (x,y) values are in pixels.
 ## The function should return true if the event was handled, and false otherwise.
@@ -153,7 +268,7 @@ type
 ## The function should return true if the event was handled, and false otherwise.
 
 type
-  GLFMKeyFunc* = proc (display: ptr GLFMDisplay; keyCode: GLFMKey;
+  GLFMKeyFunc* = proc (display: ptr GLFMDisplay; Key: GLFMKey;
                     action: GLFMKeyAction; modifiers: cint): bool {.cdecl.}
 
 ## Callback function for character input events.
@@ -194,7 +309,7 @@ type
   GLFMAppFocusFunc* = proc (display: ptr GLFMDisplay; focused: bool) {.cdecl.}
 
 ##  MARK: Functions
-## Main entry point for the app, where the display can be initialized and the GLFMMainLoopFunc
+## Main entry point for the app, where the display can be initialized and the GLFMRenderFunc
 ## can be set.
 
 {.push importc, cdecl.}
@@ -213,6 +328,10 @@ proc glfmSetDisplayConfig*(display: ptr GLFMDisplay; preferredAPI: GLFMRendering
                           multisample: GLFMMultisample)
 proc glfmSetUserData*(display: ptr GLFMDisplay; userData: pointer)
 proc glfmGetUserData*(display: ptr GLFMDisplay): pointer
+
+## This function should be called at the end of the ``GLFMRenderFunc`` if any content was rendered.
+proc glfmSwapBuffers*(display: ptr GLFMDisplay)
+
 ## Sets the allowed user interface orientations
 
 proc glfmSetUserInterfaceOrientation*(display: ptr GLFMDisplay; allowedOrientations: GLFMUserInterfaceOrientation)
@@ -264,7 +383,7 @@ proc glfmExtensionSupported*(extension: cstring): bool
 proc glfmGetProcAddress*(functionName: cstring): GLFMProc
 ## Sets the function to call before each frame is displayed.
 
-proc glfmSetMainLoopFunc*(display: ptr GLFMDisplay; mainLoopFunc: GLFMMainLoopFunc)
+proc glfmSetRenderFunc*(display: ptr GLFMDisplay; renderFunc: GLFMRenderFunc)
 ## Sets the function to call when a mouse or touch event occurs.
 
 proc glfmSetTouchFunc*(display: ptr GLFMDisplay; touchFunc: GLFMTouchFunc)

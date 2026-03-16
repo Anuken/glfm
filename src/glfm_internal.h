@@ -1,25 +1,8 @@
-/*
- GLFM
- https://github.com/brackeen/glfm
- Copyright (c) 2014-2021 David Brackeen
- 
- This software is provided 'as-is', without any express or implied warranty.
- In no event will the authors be held liable for any damages arising from the
- use of this software. Permission is granted to anyone to use this software
- for any purpose, including commercial applications, and to alter it and
- redistribute it freely, subject to the following restrictions:
- 
- 1. The origin of this software must not be misrepresented; you must not
-    claim that you wrote the original software. If you use this software in a
-    product, an acknowledgment in the product documentation would be appreciated
-    but is not required.
- 2. Altered source versions must be plainly marked as such, and must not be
-    misrepresented as being the original software.
- 3. This notice may not be removed or altered from any source distribution.
- */
+// GLFM
+// https://github.com/brackeen/glfm
 
-#ifndef GLFM_PLATFORM_H
-#define GLFM_PLATFORM_H
+#ifndef GLFM_INTERNAL_H
+#define GLFM_INTERNAL_H
 
 #include "glfm.h"
 #include <stdarg.h>
@@ -71,6 +54,7 @@ struct GLFMDisplay {
     GLFMSurfaceDestroyedFunc surfaceDestroyedFunc;
     GLFMKeyboardVisibilityChangedFunc keyboardVisibilityChangedFunc;
     GLFMOrientationChangedFunc orientationChangedFunc;
+    GLFMDisplayChromeInsetsChangedFunc displayChromeInsetsChangedFunc;
     GLFMMemoryWarningFunc lowMemoryFunc;
     GLFMAppFocusFunc focusFunc;
     GLFMSensorFunc sensorFuncs[GLFM_NUM_SENSORS];
@@ -82,13 +66,12 @@ struct GLFMDisplay {
 
 // MARK: - Notification functions
 
-void glfm__displayChromeUpdated(GLFMDisplay *display);
-void glfm__sensorFuncUpdated(GLFMDisplay *display);
+static void glfm__displayChromeUpdated(GLFMDisplay *display);
+static void glfm__sensorFuncUpdated(GLFMDisplay *display);
 
 // MARK: - Setters
 
-GLFMSurfaceErrorFunc glfmSetSurfaceErrorFunc(GLFMDisplay *display,
-                                             GLFMSurfaceErrorFunc surfaceErrorFunc) {
+GLFMSurfaceErrorFunc glfmSetSurfaceErrorFunc(GLFMDisplay *display, GLFMSurfaceErrorFunc surfaceErrorFunc) {
     GLFMSurfaceErrorFunc previous = NULL;
     if (display) {
         previous = display->surfaceErrorFunc;
@@ -112,7 +95,7 @@ void glfmSetDisplayConfig(GLFMDisplay *display,
     }
 }
 
-GLFMInterfaceOrientation glfmGetSupportedInterfaceOrientation(GLFMDisplay *display) {
+GLFMInterfaceOrientation glfmGetSupportedInterfaceOrientation(const GLFMDisplay *display) {
     return display ? display->supportedOrientations : GLFMInterfaceOrientationAll;
 }
 
@@ -120,8 +103,7 @@ GLFMUserInterfaceOrientation glfmGetUserInterfaceOrientation(GLFMDisplay *displa
     return (GLFMUserInterfaceOrientation)glfmGetSupportedInterfaceOrientation(display);
 }
 
-void glfmSetUserInterfaceOrientation(GLFMDisplay *display,
-                                     GLFMUserInterfaceOrientation supportedOrientations) {
+void glfmSetUserInterfaceOrientation(GLFMDisplay *display, GLFMUserInterfaceOrientation supportedOrientations) {
     glfmSetSupportedInterfaceOrientation(display, (GLFMInterfaceOrientation)supportedOrientations);
 }
 
@@ -131,11 +113,11 @@ void glfmSetUserData(GLFMDisplay *display, void *userData) {
     }
 }
 
-void *glfmGetUserData(GLFMDisplay *display) {
+void *glfmGetUserData(const GLFMDisplay *display) {
     return display ? display->userData : NULL;
 }
 
-GLFMUserInterfaceChrome glfmGetDisplayChrome(GLFMDisplay *display) {
+GLFMUserInterfaceChrome glfmGetDisplayChrome(const GLFMDisplay *display) {
     return display ? display->uiChrome : GLFMUserInterfaceChromeNavigation;
 }
 
@@ -173,8 +155,7 @@ GLFMMainLoopFunc glfmSetMainLoopFunc(GLFMDisplay *display, GLFMMainLoopFunc main
     return previous;
 }
 
-GLFMSurfaceCreatedFunc glfmSetSurfaceCreatedFunc(GLFMDisplay *display,
-                                                 GLFMSurfaceCreatedFunc surfaceCreatedFunc) {
+GLFMSurfaceCreatedFunc glfmSetSurfaceCreatedFunc(GLFMDisplay *display, GLFMSurfaceCreatedFunc surfaceCreatedFunc) {
     GLFMSurfaceCreatedFunc previous = NULL;
     if (display) {
         previous = display->surfaceCreatedFunc;
@@ -183,8 +164,7 @@ GLFMSurfaceCreatedFunc glfmSetSurfaceCreatedFunc(GLFMDisplay *display,
     return previous;
 }
 
-GLFMSurfaceResizedFunc glfmSetSurfaceResizedFunc(GLFMDisplay *display,
-                                                 GLFMSurfaceResizedFunc surfaceResizedFunc) {
+GLFMSurfaceResizedFunc glfmSetSurfaceResizedFunc(GLFMDisplay *display, GLFMSurfaceResizedFunc surfaceResizedFunc) {
     GLFMSurfaceResizedFunc previous = NULL;
     if (display) {
         previous = display->surfaceResizedFunc;
@@ -193,8 +173,7 @@ GLFMSurfaceResizedFunc glfmSetSurfaceResizedFunc(GLFMDisplay *display,
     return previous;
 }
 
-GLFMSurfaceRefreshFunc glfmSetSurfaceRefreshFunc(GLFMDisplay *display,
-                                                 GLFMSurfaceRefreshFunc surfaceRefreshFunc) {
+GLFMSurfaceRefreshFunc glfmSetSurfaceRefreshFunc(GLFMDisplay *display, GLFMSurfaceRefreshFunc surfaceRefreshFunc) {
     GLFMSurfaceRefreshFunc previous = NULL;
     if (display) {
         previous = display->surfaceRefreshFunc;
@@ -223,12 +202,21 @@ GLFMKeyboardVisibilityChangedFunc glfmSetKeyboardVisibilityChangedFunc(GLFMDispl
     return previous;
 }
 
-GLFMOrientationChangedFunc glfmSetOrientationChangedFunc(GLFMDisplay *display,
-                                                         GLFMOrientationChangedFunc func) {
+GLFMOrientationChangedFunc glfmSetOrientationChangedFunc(GLFMDisplay *display, GLFMOrientationChangedFunc func) {
     GLFMOrientationChangedFunc previous = NULL;
     if (display) {
         previous = display->orientationChangedFunc;
         display->orientationChangedFunc = func;
+    }
+    return previous;
+}
+
+GLFMDisplayChromeInsetsChangedFunc glfmSetDisplayChromeInsetsChangedFunc(GLFMDisplay *display,
+                                                                         GLFMDisplayChromeInsetsChangedFunc func) {
+    GLFMDisplayChromeInsetsChangedFunc previous = NULL;
+    if (display) {
+        previous = display->displayChromeInsetsChangedFunc;
+        display->displayChromeInsetsChangedFunc = func;
     }
     return previous;
 }
@@ -274,8 +262,10 @@ GLFMSensorFunc glfmSetSensorFunc(GLFMDisplay *display, GLFMSensor sensor, GLFMSe
     int index = (int)sensor;
     if (display && index >= 0 && index < GLFM_NUM_SENSORS) {
         previous = display->sensorFuncs[index];
-        display->sensorFuncs[index] = sensorFunc;
-        glfm__sensorFuncUpdated(display);
+        if (sensorFunc != previous) {
+            display->sensorFuncs[index] = sensorFunc;
+            glfm__sensorFuncUpdated(display);
+        }
     }
     return previous;
 }
@@ -304,20 +294,12 @@ void glfmSetSwapBehavior(GLFMDisplay *display, GLFMSwapBehavior behavior) {
     }
 }
 
-GLFMSwapBehavior glfmGetSwapBehavior(GLFMDisplay *display) {
+GLFMSwapBehavior glfmGetSwapBehavior(const GLFMDisplay *display) {
     if (display) {
         return display->swapBehavior;
     }
 
     return GLFMSwapBehaviorPlatformDefault;
-}
-
-// MARK: - Helper functions
-
-static void glfm__reportSurfaceError(GLFMDisplay *display, const char *errorMessage) {
-    if (display->surfaceErrorFunc && errorMessage) {
-        display->surfaceErrorFunc(display, errorMessage);
-    }
 }
 
 // glfmExtensionSupported function is from
@@ -351,6 +333,14 @@ bool glfmExtensionSupported(const char *extension) {
     }
 
     return false;
+}
+
+// MARK: - Helper functions
+
+static void glfm__reportSurfaceError(GLFMDisplay *display, const char *errorMessage) {
+    if (display->surfaceErrorFunc && errorMessage) {
+        display->surfaceErrorFunc(display, errorMessage);
+    }
 }
 
 #ifdef __cplusplus
